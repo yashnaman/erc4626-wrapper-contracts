@@ -21,6 +21,11 @@ import {IERC20Metadata} from "lib/openzeppelin-contracts/contracts/token/ERC20/e
 /// @dev Relies on the `_transferIn` / `_transferOut` extension hooks of the OpenZeppelin `ERC4626` pinned in `lib`;
 /// these are not present in upstream OpenZeppelin releases and overriding them is what lets the wrapper interpose the
 /// unwrap-and-deposit / withdraw-and-wrap steps around the standard ERC-4626 flow.
+/// @dev The inherited `maxDeposit` / `maxMint` / `maxWithdraw` / `maxRedeem` getters are NOT bounded by
+/// `UNDERLYING_VAULT`'s own deposit cap or available withdraw liquidity, since every deposit/withdrawal is forwarded
+/// to it. They can therefore over-report: a deposit/withdrawal sized off these views may revert at the underlying
+/// vault when it is capped, paused, or illiquid. This is a liveness/composability caveat only (no fund loss); funds
+/// already supplied stay redeemable once the underlying vault frees up.
 abstract contract BaseERC4626Wrapper is ERC4626 {
     using SafeERC20 for IERC20;
 
