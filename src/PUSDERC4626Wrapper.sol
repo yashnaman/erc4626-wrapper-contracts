@@ -16,6 +16,10 @@ import {ICollateralToken, ICollateralOnramp, ICollateralOfframp} from "src/inter
 /// @dev Wrap/unwrap go through the permissionless on/off ramps and are assumed to be 1:1. If a ramp pauses or stops
 /// honouring the 1:1 conversion, deposits and withdrawals revert; funds already supplied remain in the underlying
 /// vault and are not lost, but become temporarily unredeemable through this wrapper until the ramp resumes.
+/// @dev there are no markets that actually use PUSD as collateral token at the ConditionalTokens level.
+/// PUSD gets converted into USDC.e in both normal binary markets and markets with NegRiskAdapter
+/// (see lib/ctf-exchange-v2/src/adapters/CtfCollateralAdapter.sol and lib/ctf-exchange-v2/src/adapters/NegRiskCtfCollateralAdapter.sol).
+/// There is no need for this contract unless that changes.
 contract PUSDERC4626Wrapper is BaseERC4626Wrapper {
     using SafeERC20 for IERC20;
 

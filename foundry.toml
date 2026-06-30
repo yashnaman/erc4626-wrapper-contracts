@@ -2,8 +2,42 @@
 src = "src"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.34" 
+# No pinned solc_version: the NegRiskAdapter dependency is `pragma 0.8.34`-incompatible (pinned 0.8.19) and is
+# deployed via `vm.deployCode` in its own compilation unit, so the build must allow multiple compiler versions.
 optimizer = true
 optimizer_runs = 4294967295
+# Scoped context remappings so the NegRiskAdapter (0.8.19) dependency's root-relative `src/` and `lib/` imports resolve
+# into its own subtree when force-compiled for `vm.deployCode`. Auto-detected remappings (e.g. @solady) still apply.
+remappings = [
+    "lib/neg-risk-ctf-adapter/:src/=lib/neg-risk-ctf-adapter/src/",
+    "lib/neg-risk-ctf-adapter/:lib/=lib/neg-risk-ctf-adapter/lib/",
+]
+fs_permissions = [
+    { access = "read", path = "./out/" },
+    { access = "read", path = "./lib/neg-risk-ctf-adapter/artifacts/" },
+]
+
+# Local profile: keep fuzz/invariant runs light so the suite is fast to iterate on.
+[profile.default.fuzz]
+runs = 256
+
+[profile.default.invariant]
+runs = 64
+depth = 64
+fail_on_revert = true
+
+# CI profile: heavier fuzz/invariant depth for stronger assurance. Selected via FOUNDRY_PROFILE=ci.
+[profile.ci.fuzz]
+runs = 5000
+
+[profile.ci.invariant]
+runs = 256
+depth = 512
+fail_on_revert = true
+
+# The linter can't resolve the NegRiskAdapter dependency's context-remapped imports, so disable it during `forge build`.
+# Lint our own code on demand with `forge lint src/`.
+[lint]
+lint_on_build = false
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
